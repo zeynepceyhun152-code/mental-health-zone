@@ -136,3 +136,30 @@ insert into public.settings (key, value) values
   ('report_email', 'zceyhun28@tcs.org'),
   ('drive_url', 'https://drive.google.com/drive/folders/1AKMYAlxx91NhtWCs_SlzWZgH1od4MPGA?usp=share_link')
 on conflict (key) do update set value = excluded.value;
+
+
+-- ---------- Contact form messages (added later) ----------
+create table if not exists public.contact_messages (
+  id bigint generated always as identity primary key,
+  name text not null check (char_length(name) <= 200),
+  email text not null check (char_length(email) <= 320),
+  topic text check (char_length(topic) <= 100),
+  message text not null check (char_length(message) <= 1000),
+  created_at timestamptz default now()
+);
+alter table public.contact_messages enable row level security;
+drop policy if exists "contact: anyone can send" on public.contact_messages;
+create policy "contact: anyone can send" on public.contact_messages for insert to anon, authenticated with check (true);
+drop policy if exists "contact: admin reads" on public.contact_messages;
+create policy "contact: admin reads" on public.contact_messages for select to authenticated using (public.is_admin());
+drop policy if exists "contact: admin deletes" on public.contact_messages;
+create policy "contact: admin deletes" on public.contact_messages for delete to authenticated using (public.is_admin());
+
+-- ---------- Permissions (newer Supabase projects need these) ----------
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+grant usage, select on all sequences in schema public to anon, authenticated;
+grant execute on function public.is_admin() to authenticated;
+grant insert on public.contact_messages to anon;
+revoke update on public.tasks from authenticated;
+grant update (done) on public.tasks to authenticated;

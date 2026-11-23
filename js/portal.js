@@ -107,8 +107,21 @@
       : `<div class="empty">No reports yet.</div>`;
   }
 
+  async function loadMessages() {
+    const { data } = await sb.from("contact_messages").select("*").order("created_at", { ascending: false });
+    $("messages").innerHTML = data && data.length
+      ? data.map((m) => `<div class="news"><small>${fmt(m.created_at)} · ${esc(m.topic)}</small><strong>${esc(m.name)} · <a href="mailto:${esc(m.email)}">${esc(m.email)}</a></strong><span style="white-space:pre-line">${esc(m.message)}</span><button class="linkbtn" data-del-msg="${m.id}" style="font-size:13px">Delete</button></div>`).join("")
+      : `<div class="empty">No messages yet.</div>`;
+  }
+
   if (isAdmin) {
     $("admin").hidden = false;
+    $("messages").addEventListener("click", async (e) => {
+      const id = e.target.dataset.delMsg;
+      if (!id || !confirm("Delete this message?")) return;
+      await sb.from("contact_messages").delete().eq("id", id);
+      loadMessages();
+    });
     $("news").addEventListener("click", async (e) => {
       const id = e.target.dataset.delNews;
       if (!id || !confirm("Delete this announcement?")) return;
@@ -150,7 +163,7 @@
       loadAllEvents(); loadMyEvents();
     });
     await loadReps();
-    await Promise.all([loadAllEvents(), loadReports()]);
+    await Promise.all([loadAllEvents(), loadReports(), loadMessages()]);
   }
 
   await Promise.all([loadNews(), loadTasks(), loadMyEvents()]);
