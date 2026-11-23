@@ -1,0 +1,13 @@
+/* Shared basics for The Mental Health Zone site */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #FCF7F6; -webkit-font-smoothing: antialiased; }
+img { max-width: 100%; }
+a { color: #2A2E31; }
+a:hover { color: #000; }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible {
+  outline: 3px solid #A9D8EC; outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  header nav { justify-content: center !important; }
+}

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Create your rep profile · The Mental Health Zone</title>
+<link rel="icon" href="/images/cover.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gilda+Display&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/portal.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+</head>
+<body class="p-body">
+<header class="p-top"><div class="p-top-in">
+<a class="p-brand" href="/"><img src="/images/cover.png" alt="">The Mental Health Zone</a>
+<span></span>
+</div></header>
+<main class="p-wrap p-wide">
+<div style="display:flex;flex-direction:column;gap:12px">
+<span class="chip blue" style="align-self:flex-start">Application accepted</span>
+<h1 class="p-h1">Welcome to the team! Let's set up your rep profile.</h1>
+<p class="p-sub">This private link was sent only to you. Fill in your details once and you'll have your own School Rep Portal.</p>
+</div>
+<p class="msg" data-msg id="top" role="status"></p>
+<form id="f" class="card" hidden>
+<h2 class="p-h2">About you</h2>
+<div class="grid">
+<label class="f">Full name<input id="full_name" required></label>
+<label class="f">Email<input id="email" type="email" readonly></label>
+<label class="f">Phone (for the team group chat)<input id="phone" type="tel"></label>
+<label class="f">Instagram (optional)<input id="instagram"></label>
+</div>
+<h2 class="p-h2">Your school</h2>
+<div class="grid">
+<label class="f">School name<input id="school" required></label>
+<label class="f">City<input id="city" required></label>
+<label class="f">Country<input id="country" required></label>
+<label class="f">Time zone<select id="timezone"><option>Americas</option><option>Europe / Türkiye</option><option>Asia</option><option>Other</option></select></label>
+<label class="f">School's mental health club (if any)<input id="club_name"></label>
+<label class="f">School Instagram (optional)<input id="school_instagram"></label>
+</div>
+<h2 class="p-h2">Your account</h2>
+<div class="grid">
+<label class="f">Create a password<input type="password" id="pw" minlength="8" autocomplete="new-password" required></label>
+<label class="f">Confirm password<input type="password" id="pw2" minlength="8" autocomplete="new-password" required></label>
+</div>
+<label class="check"><input type="checkbox" id="agree" required>I've read the School Rep Handbook and agree to follow its guidelines, including the photo and safety rules.</label>
+<button class="btn" id="go" type="submit">Create my profile</button>
+<p class="msg" id="msg" role="status"></p>
+</form>
+</main>
+<script>
+const topMsg = document.getElementById("top"), msg = document.getElementById("msg"), form = document.getElementById("f");
+let user = null;
+function ready(session) {
+  if (!session || user) return;
+  user = session.user;
+  document.getElementById("email").value = user.email;
+  form.hidden = false; mhz.show(topMsg, "");
+}
+sb.auth.onAuthStateChange((_e, session) => ready(session));
+(async () => {
+  mhz.show(topMsg, "Checking your invite link…", true);
+  const { data } = await sb.auth.getSession();
+  ready(data.session);
+  setTimeout(() => { if (!user) mhz.show(topMsg, "This link has expired or was already used. Ask Zeynep to send you a new invite, or sign in if you already have an account."); }, 2500);
+})();
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (pw.value !== pw2.value) return mhz.show(msg, "The passwords don't match.");
+  const go = document.getElementById("go"); go.disabled = true; mhz.show(msg, "Saving…", true);
+  const pwRes = await sb.auth.updateUser({ password: pw.value });
+  if (pwRes.error) { go.disabled = false; return mhz.show(msg, pwRes.error.message); }
+  const v = (id) => document.getElementById(id).value.trim();
+  const { error } = await sb.from("profiles").upsert({
+    id: user.id, email: user.email, full_name: v("full_name"), phone: v("phone"), instagram: v("instagram"),
+    school: v("school"), city: v("city"), country: v("country"), timezone: v("timezone"),
+    club_name: v("club_name"), school_instagram: v("school_instagram"), agreed_handbook: true,
+  });
+  go.disabled = false;
+  if (error) return mhz.show(msg, "Couldn't save your profile: " + error.message);
+  mhz.show(msg, "Done! Opening your portal…", true);
+  setTimeout(() => (location.href = "/portal.html"), 800);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sign in · The Mental Health Zone</title>
+<link rel="icon" href="/images/cover.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gilda+Display&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/portal.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+</head>
+<body class="p-body">
+<header class="p-top"><div class="p-top-in">
+<a class="p-brand" href="/"><img src="/images/cover.png" alt="">The Mental Health Zone</a>
+<a class="p-link" href="/">Back to site</a>
+</div></header>
+<main class="p-narrow">
+<h1 class="p-h1">Welcome back, rep.</h1>
+<p class="p-sub">Sign in to your School Rep Portal.</p>
+<form id="f" class="card">
+<label class="f">Email<input type="email" id="email" autocomplete="email" required></label>
+<label class="f">Password<input type="password" id="pw" autocomplete="current-password" required></label>
+<button class="btn" id="go" type="submit">Sign in</button>
+<button class="linkbtn" id="forgot" type="button">Forgot password?</button>
+<p class="msg" data-msg id="msg" role="status"></p>
+</form>
+<p class="p-sub" style="font-size:15px">Not a rep yet? <a href="/join.html">Apply here</a>. After you're accepted, you'll get an email link to set up your account.</p>
+</main>
+<script>
+(async () => {
+  const { data } = await sb.auth.getSession();
+  if (data.session) location.replace("/portal.html");
+})();
+const msg = document.getElementById("msg");
+document.getElementById("f").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const go = document.getElementById("go"); go.disabled = true; mhz.show(msg, "");
+  const { error } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: pw.value });
+  go.disabled = false;
+  if (error) return mhz.show(msg, "That email and password don't match. Try again, or reset your password.");
+  location.href = "/portal.html";
+});
+document.getElementById("forgot").addEventListener("click", async () => {
+  const em = email.value.trim();
+  if (!em) return mhz.show(msg, "Type your email above first, then click \"Forgot password?\" again.");
+  const { error } = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + "/reset-password.html" });
+  mhz.show(msg, error ? "Couldn't send the email. Try again in a minute." : "If that email has an account, a reset link is on its way.", !error);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Rep Portal · The Mental Health Zone</title>
+<link rel="icon" href="/images/cover.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gilda+Display&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/portal.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+</head>
+<body class="p-body">
+<header class="p-top"><div class="p-top-in">
+<a class="p-brand" href="/"><img src="/images/cover.png" alt="">The Mental Health Zone</a>
+<button class="p-link" id="signout" type="button">Sign out</button>
+</div></header>
+<main class="p-wrap">
+<p class="msg" data-msg id="top" role="status">Loading your portal…</p>
+<div id="app" hidden style="display:flex;flex-direction:column;gap:28px">
+
+<section style="display:flex;flex-direction:column;gap:6px">
+<span id="where" style="color:#5E6268;font-size:15px"></span>
+<h1 class="p-h1" id="hello"></h1>
+</section>
+
+<section class="card pink">
+<h2 class="p-h2">Announcements</h2>
+<div id="news"></div>
+</section>
+
+<section class="card">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px"><h2 class="p-h2">To-do</h2><span style="font-size:14px;color:#5E6268">Tasks are assigned by the team</span></div>
+<div id="tasks" style="display:flex;flex-direction:column;gap:10px"></div>
+</section>
+
+<section class="card">
+<h2 class="p-h2">My events</h2>
+<div class="tbl"><table><thead><tr><th>Event</th><th>Date</th><th>Type</th><th>Status</th></tr></thead><tbody id="events"></tbody></table></div>
+</section>
+
+<section class="card" id="report">
+<div><h2 class="p-h2">Submit an event report</h2><p class="p-sub" style="font-size:15px;margin-top:6px">Every event gets documented so we can share it with the whole movement.</p></div>
+<div class="card blue" style="padding:16px 20px"><span><strong>After you submit, email Zeynep</strong> at <a id="mail" style="color:#1F4A5C;font-weight:600"></a> to let her know, and attach your photos, video and slides. Photos: no faces (or blur them), no cat or dog filters.</span></div>
+<form id="rf" style="display:flex;flex-direction:column;gap:16px">
+<div class="grid">
+<label class="f">Event name<input id="r_name" required></label>
+<label class="f">Date<input id="r_date" type="date"></label>
+<label class="f">About how many people came?<input id="r_att" type="number" min="0"></label>
+<label class="f">Instagram post link<input id="r_ig" type="url"></label>
+</div>
+<label class="f">How did it go?<textarea id="r_notes" rows="4"></textarea></label>
+<button class="btn" id="r_go" type="submit">Submit report</button>
+<p class="msg" id="r_msg" role="status"></p>
+</form>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:14px">
+<h2 class="p-h2">Resources</h2>
+<div class="grid res" id="res"></div>
+</section>
+
+<!-- ADMIN ONLY -->
+<section id="admin" hidden style="display:flex;flex-direction:column;gap:20px">
+<h2 class="p-h1" style="font-size:36px">Admin <span class="chip admin-tag" style="vertical-align:middle">Only you see this</span></h2>
+
+<div class="card">
+<h2 class="p-h2">Post an announcement</h2>
+<form id="af" style="display:flex;flex-direction:column;gap:14px">
+<label class="f">Title<input id="a_title" required></label>
+<label class="f">Message<textarea id="a_body" rows="3"></textarea></label>
+<button class="btn" type="submit">Post</button>
+<p class="msg" id="a_msg" role="status"></p>
+</form>
+</div>
+
+<div class="card">
+<h2 class="p-h2">Assign a task</h2>
+<form id="tf" class="grid" style="align-items:end">
+<label class="f">Task<input id="t_title" required></label>
+<label class="f">Assign to<select id="t_rep"></select></label>
+<button class="btn" type="submit">Assign</button>
+</form>
+<p class="msg" id="t_msg" role="status"></p>
+</div>
+
+<div class="card">
+<h2 class="p-h2">Add an event</h2>
+<form id="ef" class="grid" style="align-items:end">
+<label class="f">Event name<input id="e_name" required></label>
+<label class="f">Date<input id="e_date" type="date"></label>
+<label class="f">Type<select id="e_type"><option>School event</option><option>Online conference</option><option>In-person conference</option></select></label>
+<label class="f">For<select id="e_rep"></select></label>
+<button class="btn" type="submit">Add event</button>
+</form>
+<p class="msg" id="e_msg" role="status"></p>
+<div class="tbl"><table><thead><tr><th>Event</th><th>Rep</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody id="all_events"></tbody></table></div>
+</div>
+
+<div class="card">
+<h2 class="p-h2">School reps</h2>
+<div class="tbl"><table><thead><tr><th>Name</th><th>School</th><th>City, country</th><th>Email</th><th>Phone</th></tr></thead><tbody id="reps"></tbody></table></div>
+<p class="p-sub" style="font-size:14px">To add a rep: Supabase → Authentication → Users → Invite user. They get an email link to create their profile.</p>
+</div>
+
+<div class="card">
+<h2 class="p-h2">Event reports</h2>
+<div id="reports"></div>
+</div>
+</section>
+
+</div>
+</main>
+<script src="/js/portal.js"></script>
+</body>
+</html>
