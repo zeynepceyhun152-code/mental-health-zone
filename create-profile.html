@@ -63,12 +63,30 @@ function ready(session) {
   form.hidden = false; mhz.show(topMsg, "");
 }
 sb.auth.onAuthStateChange((_e, session) => ready(session));
-(async () => {
-  mhz.show(topMsg, "Checking your invite link…", true);
-  const { data } = await sb.auth.getSession();
-  ready(data.session);
-  setTimeout(() => { if (!user) mhz.show(topMsg, "This link has expired or was already used. Ask Zeynep to send you a new invite, or sign in if you already have an account."); }, 2500);
-})();
+const qp = new URLSearchParams(location.search);
+const tokenHash = qp.get("token_hash"), tokenType = qp.get("type") || "invite";
+const expiredMsg = "This link has expired or was already used. Ask Zeynep to send you a new invite, or sign in if you already have an account.";
+if (tokenHash) {
+  // School email scanners open links automatically, so the one-time code is only used when the person clicks this button.
+  const box = document.createElement("div");
+  box.className = "card";
+  box.innerHTML = '<p class="p-sub">Click below to open your invite and set up your profile.</p><button class="btn" id="cont" type="button">Continue to my profile</button>';
+  form.parentNode.insertBefore(box, form);
+  document.getElementById("cont").addEventListener("click", async (ev) => {
+    ev.target.disabled = true; mhz.show(topMsg, "Opening your invite…", true);
+    const { data, error } = await sb.auth.verifyOtp({ token_hash: tokenHash, type: tokenType });
+    if (error || !data.session) { ev.target.disabled = false; return mhz.show(topMsg, expiredMsg); }
+    history.replaceState(null, "", location.pathname);
+    box.remove(); ready(data.session);
+  });
+} else {
+  (async () => {
+    mhz.show(topMsg, "Checking your invite link…", true);
+    const { data } = await sb.auth.getSession();
+    ready(data.session);
+    setTimeout(() => { if (!user) mhz.show(topMsg, expiredMsg); }, 2500);
+  })();
+}
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (pw.value !== pw2.value) return mhz.show(msg, "The passwords don't match.");
